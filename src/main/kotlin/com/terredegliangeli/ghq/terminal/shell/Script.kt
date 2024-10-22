@@ -17,6 +17,10 @@ class Script() {
     fun hasNext():Boolean {
         return commands.isNotEmpty()
     }
+
+    fun clear() {
+        commands.clear()
+    }
 }
 
 class ScriptRow(val command:String, val args:List<String>);

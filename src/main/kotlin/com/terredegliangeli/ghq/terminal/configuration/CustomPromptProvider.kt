@@ -9,12 +9,10 @@ import org.springframework.shell.jline.PromptProvider
 @Configuration
 class CustomPromptProvider {
 
-    var scriptMode = false
-
     @Bean
-    fun myPromptProvider(): PromptProvider? {
+    fun myPromptProvider(settings:TerminalSettings): PromptProvider? {
         return PromptProvider {
-            if (scriptMode) {
+            if (settings.scriptMode) {
                 AttributedString(">")
             } else {
                 AttributedString("ghq:>")

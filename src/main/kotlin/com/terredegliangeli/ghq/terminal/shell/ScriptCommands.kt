@@ -1,29 +1,26 @@
 package com.terredegliangeli.ghq.terminal.shell
 
-import com.terredegliangeli.ghq.terminal.configuration.CustomPromptProvider
+import com.terredegliangeli.ghq.terminal.configuration.TerminalSettings
+import com.terredegliangeli.ghq.terminal.utils.*
 import org.springframework.shell.standard.ShellComponent
 import org.springframework.shell.standard.ShellMethod
 import org.springframework.shell.standard.ShellOption
-import java.lang.Math.random
+
 
 @ShellComponent
-class ScriptCommands(val promptProvider: CustomPromptProvider) {
+class ScriptCommands(val settings: TerminalSettings) {
     var script = Script()
     private var repeat = 1
     private var connected = false
-    private var target:String? = null
-    private var varName:String? = null;
-    private var retrievedData:String? = null
+    private var varName: String? = null
+    private var connectedTo: String? = null
+    private var retrievedMessage: String? = null
+
 
     @ShellMethod(key = ["BEGIN"])
     fun begin() {
         println("Opening GHQ-BASIC script editor. Use END to execute the script.")
-        promptProvider.scriptMode = true
-    }
-
-    @ShellMethod(key = ["FOR"])
-    fun commandFor(@ShellOption(arity = Integer.MAX_VALUE, defaultValue = "") args: List<String>) {
-        addScriptCommand("FOR", args)
+        settings.scriptMode = true
     }
 
     @ShellMethod(key = ["REPEAT"])
@@ -34,11 +31,6 @@ class ScriptCommands(val promptProvider: CustomPromptProvider) {
     @ShellMethod(key = ["OPEN"])
     fun open(@ShellOption(arity = Integer.MAX_VALUE, defaultValue = "") args: List<String>) {
         addScriptCommand("OPEN", args)
-    }
-
-    @ShellMethod(key = ["NEXT"])
-    fun next(@ShellOption(arity = Integer.MAX_VALUE, defaultValue = "") args: List<String>) {
-        addScriptCommand("NEXT", args)
     }
 
     @ShellMethod(key = ["PEEK"])
@@ -53,17 +45,13 @@ class ScriptCommands(val promptProvider: CustomPromptProvider) {
 
     @ShellMethod(key = ["END"])
     fun end() {
-        if (!promptProvider.scriptMode) {
-            printError("Script command detected outside script editor. Use BEGIN to open the script editor.")
-            return
-        }
-        promptProvider.scriptMode = false
+        addScriptCommand("END", emptyList())
         evaluateCommands()
     }
 
 
-    private fun addScriptCommand(key:String, params:List<String>) {
-        if (!promptProvider.scriptMode) {
+    private fun addScriptCommand(key: String, params: List<String>) {
+        if (!settings.scriptMode) {
             printError("Script command detected outside script editor. Use BEGIN to open the script editor.")
             return
         }
@@ -71,139 +59,148 @@ class ScriptCommands(val promptProvider: CustomPromptProvider) {
     }
 
     private fun evaluateCommands() {
-        while (script.hasNext()) {
-            executeCommand(script.getNextCommand())
+        var ok = true
+        while (script.hasNext() && ok) {
+            ok = executeCommand(script.getNextCommand()!!)
         }
         repeat = 1
         connected = false
-        target = null
+        connectedTo = null
         varName = null
-        retrievedData = null
+        retrievedMessage = null
+        settings.scriptMode = false
+        script.clear()
     }
 
-    private fun delayedMessage(message:String) {
-        for (i in 1..3) {
-            print(".")
-            val delay = (random() * 200 + 300).toLong()
-            Thread.sleep(delay)
+    private fun executeCommand(row: ScriptRow): Boolean {
+        return when (row.command) {
+            "REPEAT" -> executeRepeat(row.args)
+            "OPEN" -> executeOpen(row.args)
+            "PEEK" -> executePeek(row.args)
+            "PRINT" -> executePrint(row.args)
+            "END" -> true
+            else -> {
+                printError("unknown command: ${row.command}")
+                false
+            }
         }
-        println(message)
     }
 
-    private fun executeCommand(row:ScriptRow?) {
-        row?.args?.let {args ->
-            when (row.command) {
-                "REPEAT" -> {
-                    when {
-                        args.isEmpty() -> {
-                            printError("Error: expecting the number of repetitions for REPEAT command")
-                            return
-                        }
-                        args.size > 1 -> {
-                            printError("Error: too many arguments for REPEAT command")
-                            return
-                        }
-                        args[0].toIntOrNull() == null -> {
-                            printError("Error: expecting a number for REPEAT command")
-                            return
-                        }
-                        else -> repeat = args[0].toInt()
+    private fun executeRepeat(args: List<String>): Boolean {
+        return when {
+            args.isEmpty() -> {
+                printError("expecting the number of repetitions for REPEAT command")
+                false
+            }
+
+            args.size > 1 -> {
+                printError("too many arguments for REPEAT command")
+                false
+            }
+
+            args[0].toIntOrNull() == null -> {
+                printError("expecting a number for REPEAT command")
+                false
+            }
+
+            else -> {
+                repeat = args[0].toInt()
+                true
+            }
+        }
+    }
+
+    private fun executeOpen(args: List<String>): Boolean {
+        return when {
+            args.isEmpty() || args.size == 1 -> {
+                printError("missing arguments for OPEN command")
+                false
+            }
+
+            args.size > 2 -> {
+                printError("too many arguments for OPEN command")
+                false
+            }
+
+            else -> {
+                connectedTo = args[1]
+                for (i in 1..repeat) {
+                    print("CONNECTION ATTEMPT $i/$repeat")
+                    if (i == 3 && fileExists(connectedTo)) {
+                        retrievedMessage = readFile(connectedTo)
+                        delayedMessage("SUCCESS!")
+                        connected = true
+                        break
+                    } else {
+                        delayedMessage("FAILED!")
                     }
                 }
-                "OPEN" -> {
-                    when {
-                        args.isEmpty() || args.size == 1 -> {
-                            printError("Error: missing arguments")
-                            return
-                        }
-
-                        args.size > 2 -> {
-                            printError("Error: too many arguments for OPEN command")
-                            return
-                        }
-
-                        else -> {
-                            target = args[1]
-                            if (target == "USA-5552368" || target == "ITA-579705") {
-                                for (i in 1..repeat) {
-                                    print("CONNECTION ATTEMPT $i/$repeat")
-                                    if (i == 3) {
-                                        delayedMessage("SUCCESS!")
-                                        connected = true;
-                                        break
-                                    } else {
-                                        delayedMessage("FAILED!")
-                                    }
-                                }
-                            } else {
-                                for (i in 1..repeat) {
-                                    print("CONNECTION ATTEMPT $i/$repeat")
-                                    delayedMessage("FAILED!")
-                                }
-                            }
-                            if (!connected) {
-                                printError("Unable to connect to $target")
-                            }
-                        }
-                    }
-                }
-                "PEEK" -> {
-                    if (!connected) {
-                        printError("Error: not connected; cannot execute PEEK command")
-                        return;
-                    }
-                    when {
-                        args.isEmpty() -> {
-                            printError("Error: missing arguments")
-                            return
-                        }
-                        args.size > 2 -> {
-                            printError("Error: too many arguments for PEEK command")
-                            return
-                        }
-                        else -> {
-                            if (args[0] != "DATABASE;") {
-                                printError("Error: invalid PEEK target or missing semicolon")
-                                return
-                            }
-                            varName = args[1]
-                            if (target == "ITA-579705") {
-                                retrievedData = """Lorem ipsum dolor sit amet, consectetur adipiscing elit"""
-                            } else if (target == "USA-5552368") {
-                                retrievedData = """Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"""
-                            }
-                        }
-                    }
-                }
-                "PRINT" -> {
-                    when {
-                        args.isEmpty() -> {
-                            printError("missing arguments")
-                            return
-                        }
-
-                        args.size > 1 -> {
-                            printError("too many arguments for PRINT command")
-                            return
-                        }
-
-                        else -> {
-                            if (!connected) {
-                                return
-                            }
-                            if (args[0] == varName) {
-                                println(retrievedData)
-                            } else {
-                                printError("no data stored in variable $varName")
-                            }
-                        }
-                    }
+                if (!connected) {
+                    printError("Unable to connect to $connectedTo")
+                    connectedTo = null
+                    false
+                } else {
+                    println("Connected to $connectedTo")
+                    true
                 }
             }
         }
     }
 
-    fun printError(message:String) {
-        println("\u001B[31mError: $message\u001B[0m")
+    private fun executePeek(args: List<String>): Boolean {
+        return when {
+            !connected -> {
+                printError("not connected; cannot execute PEEK command")
+                false
+            }
+
+            args.isEmpty() -> {
+                printError("missing arguments for PEEK command")
+                false
+            }
+
+            args.size > 2 -> {
+                printError("too many arguments for PEEK command")
+                false
+            }
+
+            args[0] != "DATABASE;" -> {
+                printError("invalid PEEK target or missing semicolon")
+                false
+            }
+
+            else -> {
+                varName = args[1]
+                true
+            }
+        }
+    }
+
+    private fun executePrint(args: List<String>): Boolean {
+        return when {
+            args.isEmpty() -> {
+                printError("missing arguments for PRINT command")
+                false
+            }
+
+            args.size > 1 -> {
+                printError("too many arguments for PRINT command")
+                false
+            }
+
+            else -> {
+                if (connectedTo == null || retrievedMessage == null) {
+                    printError("You are not connected to any database")
+                    false
+                }
+                if (args[0] == varName) {
+                    printMessageLineByLine(retrievedMessage!!)
+                    true
+                } else {
+                    printError("no data stored in variable $varName")
+                    false
+                }
+            }
+        }
     }
 }
