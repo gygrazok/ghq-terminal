@@ -11,8 +11,11 @@ class CustomPromptProvider {
 
     @Bean
     fun myPromptProvider(settings:TerminalSettings): PromptProvider? {
+
         return PromptProvider {
-            if (settings.scriptMode) {
+            if (settings.panicMode) {
+                AttributedString("ghq:(offline)>")
+            } else if (settings.scriptMode) {
                 AttributedString(">")
             } else {
                 AttributedString("ghq:>")

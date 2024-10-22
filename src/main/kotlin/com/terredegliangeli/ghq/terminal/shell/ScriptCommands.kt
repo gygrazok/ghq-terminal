@@ -203,4 +203,5 @@ class ScriptCommands(val settings: TerminalSettings) {
             }
         }
     }
+
 }

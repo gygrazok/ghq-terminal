@@ -15,6 +15,9 @@ class CommunicationCommands(val settings: TerminalSettings, val componentFlowBui
 
     @ShellMethod(key = ["VIDEOTEL TEXT MESSAGE"])
     fun videotel(@ShellOption(arity = 1, defaultValue = "") target: String) {
+        if (settings.panicMode) {
+            throw Exception("Phone line is not available.")
+        }
         if (target == "") {
             println("Please provide a phone number to deliver the message to.")
             return
@@ -32,6 +35,7 @@ class CommunicationCommands(val settings: TerminalSettings, val componentFlowBui
     private fun sendVideotelMessage(target: String, message: String) {
         println("Sending message to $target: $message")
     }
+
 
 
 
