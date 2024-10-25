@@ -28,7 +28,8 @@ class CommunicationCommands(val settings: TerminalSettings, val componentFlowBui
             .resultMode(ResultMode.ACCEPT)
             .and()
             .build()
-        val message = flow.run().context.get<String>("message")
+        val result = flow.run()
+        val message = result.context.get<String>("message")
         sendVideotelMessage(target, message)
     }
 
