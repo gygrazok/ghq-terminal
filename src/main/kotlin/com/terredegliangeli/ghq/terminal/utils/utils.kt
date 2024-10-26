@@ -12,13 +12,13 @@ fun printMessageLineByLine(message: String) = runBlocking {
     }
 }
 
-fun delayedMessage(message: String) = runBlocking {
+fun delayedMessage(start:String, end: String, dot:String = ".", minDelay:Double = 0.2, maxDelay:Double = 0.5, amount:Int = 3) = runBlocking {
     for (i in 1..3) {
-        print(".")
-        val delayMillis = (Random.nextDouble(0.2, 0.5) * 1000).toLong()
+        print(dot)
+        val delayMillis = (Random.nextDouble(minDelay, maxDelay) * 1000).toLong()
         delay(delayMillis)
     }
-    println(message)
+    println(end)
 }
 
 fun printError(message: String) {

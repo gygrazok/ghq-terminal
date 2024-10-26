@@ -125,14 +125,13 @@ class ScriptCommands(val settings: TerminalSettings) {
             else -> {
                 connectedTo = args[1]
                 for (i in 1..repeat) {
-                    print("CONNECTION ATTEMPT $i/$repeat")
                     if (i == 3 && fileExists(connectedTo)) {
                         retrievedMessage = readFile(connectedTo)
-                        delayedMessage("SUCCESS!")
+                        delayedMessage("CONNECTION ATTEMPT $i/$repeat","SUCCESS!", minDelay = 0.5, maxDelay = 1.0)
                         connected = true
                         break
                     } else {
-                        delayedMessage("FAILED!")
+                        delayedMessage("CONNECTION ATTEMPT $i/$repeat","FAILED!")
                     }
                 }
                 if (!connected) {
