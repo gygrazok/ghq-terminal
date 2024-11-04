@@ -20,6 +20,9 @@ class PanicModePasswordCheckService(private val terminalSettings: TerminalSettin
                 terminalSettings.peterPassword = true
                 out = "\u001B[32mPassword utente VENKMAN... OK!\u001B[0m"
             }
+            s == "DANA" -> {
+                out = "\u001B[31mN\u001B[33mO\u001B[32mN\u001B[36m \u001B[34mC\u001B[35m'\u001B[31mÈ\u001B[33m \u001B[32mN\u001B[36mE\u001B[34mS\u001B[35mS\u001B[31mU\u001B[33mN\u001B[32mA\u001B[36m \u001B[34mD\u001B[35mA\u001B[31mN\u001B[33mA\u001B[32m,\u001B[36m \u001B[34mS\u001B[35mO\u001B[31mL\u001B[33mT\u001B[32mA\u001B[36mN\u001B[34mT\u001B[35mO\u001B[31m \u001B[33mZ\u001B[32mU\u001B[36mU\u001B[34mL\u001B[35m!\u001B[0m"
+            }
             else -> {
                 return "\u001B[31mPassword non valida\u001B[0m"
             }

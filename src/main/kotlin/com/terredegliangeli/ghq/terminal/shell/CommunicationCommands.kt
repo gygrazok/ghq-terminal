@@ -1,6 +1,7 @@
 package com.terredegliangeli.ghq.terminal.shell
 
 import com.terredegliangeli.ghq.terminal.configuration.TerminalSettings
+import com.terredegliangeli.ghq.terminal.mqtt.dto.VideotelMessage
 import com.terredegliangeli.ghq.terminal.service.CommunicationService
 import com.terredegliangeli.ghq.terminal.utils.delayedMessage
 import com.terredegliangeli.ghq.terminal.utils.printMessageLineByLine
@@ -55,7 +56,7 @@ class CommunicationCommands(val settings: TerminalSettings, val componentFlowBui
     private fun sendVideotelMessage(target: String, message: String) {
         val recipientName = when (target) {
             "4933069" -> {
-                "Cav. S.B."
+                "Ufficio Paramedia"
             }
             "29406214", "29406215", "0229406214", "0229406215" -> {
                 "Immobiliare Colombo"
@@ -72,5 +73,9 @@ class CommunicationCommands(val settings: TerminalSettings, val componentFlowBui
         }
         println("Invio messaggio a utenza Videotel $target: $message")
         communicationService.sendMessage(message, target, recipientName)
+
+        if (recipientName == "Immobiliare Colombo") {
+            communicationService.receiveMessage(VideotelMessage("RISPOSTA AUTOMATICA: Siamo spiacenti, dopo la morte di mia sorella Fabiana l'agenzia è chiusa a tempo indefinito. Cordiali saluti, Marco Colombo", "terminal", target, recipientName))
+        }
     }
 }
