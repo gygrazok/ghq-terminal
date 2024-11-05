@@ -7,12 +7,13 @@ import kotlin.random.Random
 fun printMessageLineByLine(message: String) = runBlocking {
     message.lines().forEach {
         println(it)
-        val delayMillis = (Random.nextDouble(0.1, 0.4) * 1000).toLong()
+        val delayMillis = (Random.nextDouble(0.1, 0.8) * 1000).toLong()
         delay(delayMillis)
     }
 }
 
 fun delayedMessage(start:String, end: String, dot:String = ".", minDelay:Double = 0.2, maxDelay:Double = 0.5, amount:Int = 3) = runBlocking {
+    print(start)
     for (i in 1..3) {
         print(dot)
         val delayMillis = (Random.nextDouble(minDelay, maxDelay) * 1000).toLong()

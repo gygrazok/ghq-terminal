@@ -15,7 +15,6 @@ class FilePrintService(private val applicationProperties: ApplicationProperties)
     fun printFile(file: String) {
         val pdfFile = {}::class.java.classLoader.getResourceAsStream(file)
 
-        requireNotNull(pdfFile) { "File does not exist: $file" }
         val myPdfFile = this::class.java.classLoader.getResource(file)?.toURI()?.let { File(it) }
         if (myPdfFile == null || !myPdfFile.exists()) {
             return
@@ -28,7 +27,7 @@ class FilePrintService(private val applicationProperties: ApplicationProperties)
         printJob.printService = printService
         printJob.setPageable(PDFPageable(myDoc))
         printJob.print()
-        pdfFile.close()
+        pdfFile?.close()
     }
 
     private fun findPrintService(printerName: String): PrintService? {

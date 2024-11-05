@@ -123,6 +123,10 @@ class ScriptCommands(val settings: TerminalSettings) {
             }
 
             else -> {
+                if (settings.panicMode) {
+                    printError("Unable to establish connection")
+                    return false
+                }
                 connectedTo = args[1]
                 for (i in 1..repeat) {
                     if (i == 3 && fileExists(connectedTo)) {

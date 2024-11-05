@@ -47,8 +47,8 @@ class CommunicationCommands(val settings: TerminalSettings, val componentFlowBui
             println("Nessun messaggio da leggere")
             return
         }
-        println("Hai ${communicationService.countUnreadMessages()} messaggi non letti.")
-        delayedMessage("Ricezione messaggio in corso", "fatto!", minDelay = 0.1, maxDelay = 0.5, amount = 8)
+        println("\u001B[32mHai ${communicationService.countUnreadMessages()} messaggi non letti.\u001B[0m")
+        delayedMessage("Ricezione messaggio in corso", "", minDelay = 0.1, maxDelay = 0.8, amount = 8)
         val message = communicationService.readMessage()
         printMessageLineByLine(message.message)
     }
